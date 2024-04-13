@@ -14,7 +14,7 @@ defmodule Mozu.MixProject do
 
       description: description(),
       package: package(),
-      source_url: "https://github.com/shoz-f/npy_ex.git",
+      source_url: "https://github.com/shoz-f/mozu.git",
 
       docs: docs()
     ]
@@ -31,20 +31,22 @@ defmodule Mozu.MixProject do
   defp deps do
     [
       {:elixir_make, "~> 0.8.3"},
-      {:npy, path: "../npy_ex"}
+      {:npy, path: "../npy_ex"},
+
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false}
     ]
   end
 
   defp description() do
-    "manipulating .npy in Elixir."
+    "audio processing functions."
   end
 
   defp package() do
     [
       name: "mozu",
       licenses: ["Apache-2.0"],
-      links: %{"GitHub" => "https://github.com/shoz-f/npy_ex.git"},
-      files: ~w(lib mix.exs README* CHANGELOG* LICENSE*)
+      links: %{"GitHub" => "https://github.com/shoz-f/mozu.git"},
+      files: ~w(lib mix.exs README* CHANGELOG* LICENSE* Makefile src/* src/3rd-party/dr_wav.h)
     ]
   end
 

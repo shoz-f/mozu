@@ -2,10 +2,17 @@ defmodule Mozu do
   @moduledoc """
   Documentation for `Mozu`.
   """
+
   defmodule Audio do
+    @moduledoc """
+    Audio structure.
+    """
     defstruct channels: 1, sampling: 16000, descr: "<f8", data: nil
   end
 
+  @doc """
+  Convert %Audio{} to %Npy{}.
+  """
   def to_npy(%Audio{channels: channels, sampling: sampling, data: data}) do
     length = div(byte_size(data), 4)
     {
@@ -20,6 +27,9 @@ defmodule Mozu do
     }
   end
 
+  @doc """
+  Convert %Npy{} to %Audio{}.
+  """
   def from_npy(%Npy{descr: "<f8", shape: shape, data: data}, sampling) do
     channels = case shape do {_} -> 1; {_, ch} -> ch end
     %Audio {
