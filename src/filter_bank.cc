@@ -1,6 +1,6 @@
 /***  File Header  ************************************************************/
 /**
-* filter_bank.cpp
+* filter_bank.cc
 *
 * Elixir/Erlang Port ext. of Post-processing for DNN.
 * @author   Shozo Fukuda
@@ -10,7 +10,8 @@
 **/
 /**************************************************************************{{{*/
 
-#include "filter_bank.h"
+#include "my_erl_nif.h"
+#include "npy_utils.h"
 #include <cmath>
 #include <functional>
 #include <vector>
@@ -40,40 +41,8 @@ bool enif_get_mel_scale(ErlNifEnv* env, ERL_NIF_TERM term, int* mel_scale)
     return (*mel_scale != NONE);
 }
 
-template <typename T>
-bool enif_get_binary_as_vector(ErlNifEnv* env, ERL_NIF_TERM term, std::vector<T>& array)
-{
-    ErlNifBinary bin;
-
-    if (enif_inspect_binary(env, term, &bin)) {
-        T*  input = reinterpret_cast<T*>(bin.data);
-        int count = bin.size/sizeof(T);
-        array.assign(input, input+count);
-
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-template <typename T>
-ERL_NIF_TERM enif_make_binary_from_vector(ErlNifEnv* env, std::vector<T>& array)
-{
-    ERL_NIF_TERM term;
-    T* bin = (T*)enif_make_new_binary(env, array.size()*sizeof(T), &term);
-
-    std::copy(array.cbegin(), array.cend(), bin);
-
-    return term;
-}
-
 typedef double DType;
 typedef std::vector<DType> Array;
-
-#define dtype ((typeid(DType) == typeid(double)) ? "<f8" :\
-               (typeid(DType) == typeid(float))  ? "<f4" :\
-               "NONE")
 
 /***  Module Header  ******************************************************}}}*/
 /**
@@ -202,22 +171,6 @@ DECL_NIF(mel2hz) {
 * @retval spaced points
 **/
 /**************************************************************************{{{*/
-Array _linspace(
-double start,
-double stop,
-int    num,
-bool   endpoint=true)
-{
-    int section = (endpoint) ? (num - 1) : num;
-
-    Array result;
-    for (int i = 0; i < num; i++) {
-        result.push_back(start + i*(stop - start)/section);
-    }
-
-    return result;
-}
-
 DECL_NIF(linspace) {
     double start, stop;
     int num;
@@ -336,12 +289,8 @@ DECL_NIF(mel_filter_bank) {
         }
     }
 
-    return enif_make_tuple3(env, enif_make_ok(env),
-                                 enif_make_tuple2(env,
-                                   enif_make_int(env, fft_freqs.size()),
-                                   enif_make_int(env, filter_freqs.size()-2)),
+    return enif_make_tuple2(env, enif_make_ok(env),
                                  enif_make_binary_from_vector(env, mel_filters));
-
 }
 
-/*** filter_bank.cpp *****************************************************}}}*/
+/*** filter_bank.cc ******************************************************}}}*/

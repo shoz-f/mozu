@@ -42,6 +42,11 @@ class NifTbl:
                 continue
 
     def mk_niftbl(self, output):
+        for name, _ in self.func:
+            print('_DECL_NIF({cxx_name});'.format(cxx_name=name), file=output)
+
+        print("\nstatic ErlNifFunc nif_funcs[] = {", file=output)
+        print("//  {erl_function_name, erl_function_arity, c_function, dirty_flags}", file=output)
         for name, ality in self.func:
             erl_name = self.prefix + name
             cxx_name = self.ns + name
@@ -55,6 +60,7 @@ class NifTbl:
                        loc2=self.col-len(cxx_name)-1,
                        pad=''),
                    file=output)
+        print("};", file=output)
 
 #<MAIN>#########################################################################
 # Function:     

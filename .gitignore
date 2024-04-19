@@ -24,3 +24,11 @@ mozu-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+mix.lock
+*.wav
+*.npy
+.vscode
+src/3rd_party
+openai-whisper
+

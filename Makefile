@@ -92,7 +92,7 @@ setup: $(EXTRA_LIB)
 ################################################################################
 # NIF name
 NIF_TABLE	= src/mozu_nif.inc
-src/mozu_nif.inc: src/mozu_nif.cc src/filter_bank.cc
+src/mozu_nif.inc: src/*.cc
 	@echo "-GENERATE $(notdir $@) $^"
 	python nif_tbl.py -o $@ $^
 

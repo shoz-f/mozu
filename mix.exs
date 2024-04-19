@@ -31,9 +31,10 @@ defmodule Mozu.MixProject do
   defp deps do
     [
       {:elixir_make, "~> 0.8.3"},
-      {:npy, path: "../npy_ex"},
+  #    {:npy, path: "../npy_ex"},
 
-      {:ex_doc, "~> 0.24", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
+      {:npy, path: "../npy_ex"}
     ]
   end
 
@@ -46,7 +47,7 @@ defmodule Mozu.MixProject do
       name: "mozu",
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/shoz-f/mozu.git"},
-      files: ~w(lib mix.exs README* CHANGELOG* LICENSE* Makefile src/* src/3rd-party/dr_wav.h)
+      files: ~w(lib mix.exs README* CHANGELOG* LICENSE* Makefile src/*.{cc,h,inc} src/3rd_party/dr_libs/dr_wav.h)
     ]
   end
 

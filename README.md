@@ -1,6 +1,6 @@
 # Mozu
 
-**TODO: Add description**
+Audio processing functions to extract features from audio waveforms.
 
 ## Installation
 
@@ -15,7 +15,8 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/mozu>.
+## License
+mozu is licensed under the Apache License Version 2.0.
 
+#### -- license overview of included 3rd party libraries --
+- The "dr_libs/dr_wav.h" is Public Domain (www.unlicense.org).
