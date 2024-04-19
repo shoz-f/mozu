@@ -31,4 +31,5 @@ mix.lock
 .vscode
 src/3rd_party
 openai-whisper
+.venv
 
