@@ -85,7 +85,7 @@ clean:
 # 	mkdir -p $@
 # 	cd $@; wget -nc -q $(URL_NLOHMANN_JSON)/include.zip; unzip -q include.zip; rm include.zip
 
-EXTRA_LIB += src/3rd_party/dr_libs
+EXTRA_LIB += src/3rd_party/dr_libs src/3rd_party/pocketfft
 
 setup: $(EXTRA_LIB)
 

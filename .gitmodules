@@ -1,3 +1,6 @@
 [submodule "src/3rd_party/dr_libs"]
 	path = src/3rd_party/dr_libs
 	url = https://github.com/mackron/dr_libs.git
+[submodule "src/3rd_party/pocketfft"]
+	path = src/3rd_party/pocketfft
+	url = https://github.com/mreineck/pocketfft.git
