@@ -26,10 +26,13 @@ mozu-*.tar
 /tmp/
 
 mix.lock
+*.inc
 *.wav
 *.npy
-.vscode
-src/3rd_party
-openai-whisper
-.venv
-
+.vscode/
+src/3rd_party/
+openai-whisper/
+transformers/
+.venv/
+sync.ffs_db
+*.code-workspace
