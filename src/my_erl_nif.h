@@ -28,9 +28,12 @@ inline ERL_NIF_TERM enif_make_atom_ex(ErlNifEnv* env, const char* name)
         return enif_make_atom(env, name);
     }
 }
-#define enif_make_ok(env)       enif_make_atom_ex(env, "ok")
-#define enif_make_error(env)    enif_make_atom_ex(env, "error")
-#define enif_make_nil(enc)      enif_make_atom_ex(env, "nil")
+
+inline ERL_NIF_TERM enif_make_ok(ErlNifEnv* env)                       { return enif_make_atom_ex(env, "ok"); }
+inline ERL_NIF_TERM enif_make_ok(ErlNifEnv* env, ERL_NIF_TERM term)    { return enif_make_tuple2(env, enif_make_ok(env), term); }
+inline ERL_NIF_TERM enif_make_error(ErlNifEnv* env)                    { return enif_make_atom_ex(env, "error"); }
+inline ERL_NIF_TERM enif_make_error(ErlNifEnv* env, ERL_NIF_TERM term) { return enif_make_tuple2(env, enif_make_error(env), term); }
+inline ERL_NIF_TERM enif_make_nil(ErlNifEnv* env)                      { return enif_make_atom_ex(env, "nil"); }
 
 /***  Module Header  ******************************************************}}}*/
 /**
@@ -160,6 +163,17 @@ inline int enif_get_str(ErlNifEnv* env, ERL_NIF_TERM term, std::string* str)
     return true;
 }
 
+inline int enif_get_str(ErlNifEnv* env, ERL_NIF_TERM term, std::string& str)
+{
+    ErlNifBinary bin;
+    if (!enif_inspect_binary(env, term, &bin)) {
+        return false;
+    }
+    str.assign((const char*)bin.data, bin.size);
+
+    return true;
+}
+
 /***  Module Header  ******************************************************}}}*/
 /**
 * convert binary term to vector
@@ -172,7 +186,24 @@ inline int enif_get_str(ErlNifEnv* env, ERL_NIF_TERM term, std::string* str)
 #include <vector>
 
 template <typename T>
-bool enif_get_binary_as_vector(ErlNifEnv* env, ERL_NIF_TERM term, std::vector<T>& array)
+bool enif_get_vector(ErlNifEnv* env, ERL_NIF_TERM term, std::vector<T>& array)
+{
+    ErlNifBinary bin;
+
+    if (enif_inspect_binary(env, term, &bin)) {
+        T*  input = reinterpret_cast<T*>(bin.data);
+        int count = bin.size/sizeof(T);
+        array.assign(input, input+count);
+
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+template <typename T, typename U>
+bool enif_get_vector_as(ErlNifEnv* env, ERL_NIF_TERM term, std::vector<U>& array)
 {
     ErlNifBinary bin;
 
@@ -189,14 +220,14 @@ bool enif_get_binary_as_vector(ErlNifEnv* env, ERL_NIF_TERM term, std::vector<T>
 }
 
 template <typename T>
-ERL_NIF_TERM enif_make_binary_from_vector(ErlNifEnv* env, std::vector<T>& array)
+ERL_NIF_TERM enif_make_vector(ErlNifEnv* env, std::vector<T>&& array)
 {
     ERL_NIF_TERM term;
     T* bin = (T*)enif_make_new_binary(env, array.size()*sizeof(T), &term);
 
     std::copy(array.cbegin(), array.cend(), bin);
 
-    return term;
+    return enif_make_tuple2(env, enif_make_uint(env, array.size()), term);
 }
 
 /***  Class Header  *******************************************************}}}*/

@@ -3,6 +3,8 @@ defmodule Mozu do
   Documentation for `Mozu`.
   """
 
+  alias Mozu.NIF
+
   @doc """
   Create mel filter bank.
 
@@ -13,7 +15,8 @@ defmodule Mozu do
 
   """
   def mel_filter_bank(n_ferq_bins, n_mel_filters, min_freq, max_freq, sampling_rate, mel_scale \\ :htk, norm \\ false, triangularize_in_mel_space \\ false) do
-    with {:ok, data} <- Mozu.NIF.mel_filter_bank(n_ferq_bins, n_mel_filters, min_freq, max_freq, sampling_rate, mel_scale, norm, triangularize_in_mel_space) do
+    len = n_ferq_bins * n_mel_filters
+    with {:ok, {^len, data}} <- NIF.mel_filter_bank(n_ferq_bins, n_mel_filters, min_freq, max_freq, sampling_rate, mel_scale, norm, triangularize_in_mel_space) do
       %{
         __struct__: Npy,
         descr: "<f8",
@@ -33,9 +36,11 @@ defmodule Mozu do
       mel
 
   """
-  def hz2mel(%{data: freq}=npy, mel_scale) do
-    with {:ok, data} <- Mozu.NIF.hz2mel(freq, mel_scale), do:
-      %{npy | data: data}
+  def hz2mel(freq, mel_scale \\ :htk)
+
+  def hz2mel(%{__struct__: Npy, descr: "<f8", data: freq}=npy, mel_scale) do
+    with {:ok, {_len, data}} <- NIF.hz2mel(freq, mel_scale),
+      do: %{npy | data: data}
   end
 
   def hz2mel(freq, mel_scale) do
@@ -57,9 +62,11 @@ defmodule Mozu do
       freq
 
   """
-  def mel2hz(%{data: mel}=npy, mel_scale) do
-    with {:ok, data} <- Mozu.NIF.mel2hz(mel, mel_scale), do:
-      %{npy | data: data}
+  def mel2hz(freq, mel_scale \\ :htk)
+
+  def mel2hz(%{__struct__: Npy, descr: "<f8", data: mel}=npy, mel_scale) do
+    with {:ok, {_len, data}} <- NIF.mel2hz(mel, mel_scale),
+      do: %{npy | data: data}
   end
 
   def mel2hz(mel, mel_scale) do
@@ -70,29 +77,5 @@ defmodule Mozu do
                    do:   (1000.0*:math.exp((:math.log(6.4)/27.0)*(mel - 15.0))),
                    else: (200.0*mel/3.0)
     end
-  end
-
-  @doc """
-  Generates linearly spaced points between a specified start and stop value.
-
-  ### Examples
-
-      iex> linspace(2.0, 3.0, 5)
-      %Npy{shape: {5}, <<>>}  # 2.0, 2.2, 2.4, 2.6, 2.8, 3.0}
-
-  """
-  def linspace(start, stop, num, endpoint \\ true) do
-    with {:ok, data} <- Mozu.NIF.linspace(start, stop, num, endpoint), do:
-      %{
-        __struct__: Npy,
-        descr: "<f8",
-        fortran_order: false,
-        shape: {num},
-        data: data
-      }
-  end
-
-  def sample() do
-    Mozu.Audio.load!("ds0.wav") |> Mozu.Audio.take(100)
   end
 end

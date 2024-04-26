@@ -78,7 +78,7 @@ int mel_scale=HTK)
 }
 
 Array _hz2mel(
-Array& freq,
+const Array& freq,
 int mel_scale=HTK)
 {
     Array result;
@@ -92,15 +92,12 @@ DECL_NIF(hz2mel) {
     int mel_scale;
 
     if (ality != 2
-    || !enif_get_binary_as_vector(env, term[0], freq_array)
+    || !enif_get_vector(env, term[0], freq_array)
     || !enif_get_mel_scale(env, term[1], &mel_scale)) {
         return enif_make_badarg(env);
     }
 
-    Array mel_array = _hz2mel(freq_array, mel_scale);
-
-    return enif_make_tuple2(env, enif_make_ok(env),
-                                 enif_make_binary_from_vector(env, mel_array));
+    return enif_make_ok(env, enif_make_vector(env, _hz2mel(freq_array, mel_scale)));
 }
 
 /***  Module Header  ******************************************************}}}*/
@@ -137,7 +134,7 @@ int mel_scale=HTK)
 }
 
 Array _mel2hz(
-Array& mel,
+const Array& mel,
 int mel_scale=HTK)
 {
     Array result;
@@ -151,15 +148,12 @@ DECL_NIF(mel2hz) {
     int mel_scale;
 
     if (ality != 2
-    || !enif_get_binary_as_vector(env, term[0], mel_array)
+    || !enif_get_vector(env, term[0], mel_array)
     || !enif_get_mel_scale(env, term[1], &mel_scale)) {
         return enif_make_badarg(env);
     }
 
-    Array freq_array = _mel2hz(mel_array, mel_scale);
-
-    return enif_make_tuple2(env, enif_make_ok(env),
-                                 enif_make_binary_from_vector(env, freq_array));
+    return enif_make_ok(env, enif_make_vector(env, _mel2hz(mel_array, mel_scale)));
 }
 
 /***  Module Header  ******************************************************}}}*/
@@ -184,10 +178,7 @@ DECL_NIF(linspace) {
         return enif_make_badarg(env);
     }
 
-    Array array = _linspace(start, stop, num, endpoint);
-
-    return enif_make_tuple2(env, enif_make_ok(env),
-                                 enif_make_binary_from_vector(env, array));
+    return enif_make_ok(env, enif_make_vector(env, _linspace(start, stop, num, endpoint)));
 }
 
 /***  Module Header  ******************************************************}}}*/
@@ -200,8 +191,8 @@ DECL_NIF(linspace) {
 **/
 /**************************************************************************{{{*/
 Array _create_triangular_filter_bank(
-Array& fft_freqs,
-Array& filter_freqs)
+const Array& fft_freqs,
+const Array& filter_freqs)
 {
     const int max_row = fft_freqs.size();
     const int max_col = filter_freqs.size();
@@ -289,8 +280,7 @@ DECL_NIF(mel_filter_bank) {
         }
     }
 
-    return enif_make_tuple2(env, enif_make_ok(env),
-                                 enif_make_binary_from_vector(env, mel_filters));
+    return enif_make_ok(env, enif_make_vector(env, std::move(mel_filters)));
 }
 
 /*** filter_bank.cc ******************************************************}}}*/

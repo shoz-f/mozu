@@ -13,9 +13,12 @@
 #include "my_erl_nif.h"
 #include <vector>
 #include <cstdint>
+#include <cmath>
 
 #define DR_WAV_IMPLEMENTATION
 #include "dr_wav.h"
+
+#include "npy_utils.h"
 
 /***  Module Header  ******************************************************}}}*/
 /**
@@ -50,7 +53,7 @@ DECL_NIF(wav_load) {
 
     drwav_uninit(&wav);
 
-    return enif_make_tuple2(env, enif_make_ok(env),
+    return enif_make_ok(env,
              enif_make_tuple3(env,
                 enif_make_uint(env, channels),
                 enif_make_uint(env, sample_rate),
@@ -125,55 +128,108 @@ DECL_NIF(to_frames) {
     bool center;
 
     if (ality != 4
-    || !enif_get_binary_as_vector(env, term[0], wave)
+    || !enif_get_vector(env, term[0], wave)
     || !enif_get_int(env, term[1], &hop)
     || !enif_get_int(env, term[2], &window)
     || !enif_get_bool(env, term[3], &center)) {
         return enif_make_badarg(env);
     }
 
-    std::vector<float> frames;
-    size_t num_frames = 0;
-
     if (center) {
-        const int half_window = int((window - 1) / 2) + 1;
-    
-        for (auto src = wave.begin(); src < wave.end(); src += hop) {
-            auto frame = src - half_window;
-            for (int i = 0; i < window; i++) {
-                // add refrect padding.
-                if (frame < wave.begin()) {
-                    int refrect = wave.begin() - frame;
-                    frames.push_back(*(wave.begin() + refrect));
-                }
-                else if (frame >= wave.end()) {
-                    int refrect = frame - wave.end() + 1;
-                    frames.push_back(*(wave.end() - refrect));
-                }
-                else {
-                    frames.push_back(*frame);
-                }
-                frame++;
-            }
-            num_frames++;
-        }
-    }
-    else {
-        for (auto src = wave.begin(); (src + window) <= wave.end(); src += hop) {
-            auto frame = src;
-            for (int i = 0; i < window; i++) {
-                frames.push_back(*frame);
-                frame++;
-            }
-            num_frames++;
-        }
-
+        const int half_window = int(window / 2);
+        _pad(wave, half_window, half_window, PAD_REFLECT);
     }
 
-    return enif_make_tuple2(env, enif_make_ok(env),
-             enif_make_tuple2(env,
-               enif_make_uint(env, num_frames),
-               enif_make_binary_from_vector(env, frames)));
+    std::vector<double> frames;
+    for (auto src = wave.begin(); src < wave.end() - window; src += hop) {
+        std::vector<double> frame(src, src+window);
+   
+        std::copy(frame.begin(), frame.end(), std::back_inserter(frames));
+    }
+
+    return enif_make_ok(env, enif_make_vector(env, std::move(frames)));
+}
+
+/***  Module Header  ******************************************************}}}*/
+/**
+* dtype conversion
+* @par DESCRIPTION
+*   
+*
+* @retval 
+**/
+/**************************************************************************{{{*/
+DECL_NIF(pad) {
+    std::vector<float> array;
+    unsigned int front_size;
+    unsigned int rear_size;
+    unsigned int mode;
+
+    if (ality != 4
+    || !enif_get_vector(env, term[0], array)
+    || !enif_get_uint(env, term[1], &front_size)
+    || !enif_get_uint(env, term[2], &rear_size)
+    || !enif_get_uint(env, term[3], &mode)) {
+        return enif_make_badarg(env);
+    }
+
+    _pad(array, front_size, rear_size, mode);
+
+    return enif_make_ok(env, enif_make_vector(env, move(array)));
+}
+
+
+/***  Module Header  ******************************************************}}}*/
+/**
+* dtype conversion
+* @par DESCRIPTION
+*   
+*
+* @retval 
+**/
+/**************************************************************************{{{*/
+template <typename T>
+std::vector<T> _hanning(int N)
+{
+    std::vector<T> w(N);
+    for (int i = 0; i < N; i++) {
+        w[i] = 0.5*(1 - cos(2*M_PI*i/(N-1))); 
+    }
+
+    return w;
+}
+
+DECL_NIF(hanning) {
+    unsigned int N;
+
+    if (ality != 1
+    || !enif_get_uint(env, term[0], &N)) {
+        return enif_make_badarg(env);
+    }
+
+    return enif_make_ok(env, enif_make_vector(env, _hanning<double>(N)));
+}
+
+template <typename T>
+std::vector<T> _hamming(int N)
+{
+    std::vector<T> w(N);
+    for (int i = 0; i < N; i++) {
+        w[i] = 0.54 - 0.46*cos(2*M_PI*i/(N-1)); 
+    }
+
+    return w;
+}
+
+DECL_NIF(hamming) {
+    unsigned int N;
+
+    if (ality != 1
+    || !enif_get_uint(env, term[0], &N)) {
+        return enif_make_badarg(env);
+    }
+
+    return enif_make_ok(env, enif_make_vector(env, _hamming<double>(N)));
 }
 
 /*** audio.cpp *****************************************************}}}*/
